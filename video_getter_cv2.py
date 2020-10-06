@@ -13,9 +13,9 @@ class VideoStream:
     with a dedicated thread.
     """
 
-    def __init__(self, camName, src, isVideoFile=True, queueSize=5, writeDir=None, reconnectThreshold=20,
+    def __init__(self, video_feed_name, src, isVideoFile=True, queueSize=5, writeDir=None, reconnectThreshold=20,
                  resize_fn=None):
-        self.camName = camName
+        self.video_feed_name = video_feed_name
         self.src = src
         self.stream = cv2.VideoCapture(self.src)
         self.reconnectThreshold = reconnectThreshold
@@ -45,7 +45,8 @@ class VideoStream:
             # width and height returns 0 if stream not captured
             self.vid_width = int(self.stream.get(3))
             self.vid_height = int(self.stream.get(4))
-            self.vidInfo = {'height': self.vid_height, 'width': self.vid_width, 'fps': self.fps, 'inited': False}
+            self.vidInfo = {'video_feed_name': self.video_feed_name, 'height': self.vid_height, 'width': self.vid_width,
+                            'fps': self.fps, 'inited': False}
 
             self.out_vid = None
 
@@ -57,12 +58,12 @@ class VideoStream:
                 now = datetime.now()
                 day = now.strftime("%Y_%m_%d_%H-%M-%S")
                 out_vid_fp = os.path.join(
-                    self.writeDir, 'orig_{}_{}.avi'.format(self.camName, day))
+                    self.writeDir, 'orig_{}_{}.avi'.format(self.video_feed_name, day))
                 self.out_vid = cv2.VideoWriter(out_vid_fp, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), int(
                     self.fps), (self.vid_width, self.vid_height))
 
         except Exception as error:
-            print('init stream {} error: {}'.format(self.camName, error))
+            print('init stream {} error: {}'.format(self.video_feed_name, error))
 
     def start(self):
         self.init_src()
@@ -71,7 +72,7 @@ class VideoStream:
         t = Thread(target=self.get, args=())
         t.start()
 
-        print('start video streaming for {}'.format(self.camName))
+        print('start video streaming for {}'.format(self.video_feed_name))
         return self
 
     def reconnect_start(self):
@@ -98,7 +99,7 @@ class VideoStream:
                         time.sleep(1 / self.fps)
 
             except Exception as e:
-                print('stream grab {} error: {}'.format(self.camName, e))
+                print('stream grab {} error: {}'.format(self.video_feed_name, e))
                 grabbed = False
 
             if not grabbed:
@@ -106,12 +107,12 @@ class VideoStream:
                     self.pauseTime = time.time()
                     self.printTime = time.time()
                     print('No frames for {}, starting {:0.1f}sec countdown to reconnect.'. \
-                          format(self.camName, self.reconnectThreshold))
+                          format(self.video_feed_name, self.reconnectThreshold))
                 time_since_pause = time.time() - self.pauseTime
                 time_since_print = time.time() - self.printTime
                 if time_since_print > 1:  # prints only every 1 sec
                     print('No frames for {}, reconnect starting in {:0.1f}sec'. \
-                          format(self.camName, self.reconnectThreshold - time_since_pause))
+                          format(self.video_feed_name, self.reconnectThreshold - time_since_pause))
                     self.printTime = time.time()
 
                 if time_since_pause > self.reconnectThreshold:
@@ -145,7 +146,7 @@ class VideoStream:
             if self.out_vid:
                 self.out_vid.release()
 
-            print('stop video streaming for {}'.format(self.camName))
+            print('stop video streaming for {}'.format(self.video_feed_name))
 
     def reconnect(self):
         print('Reconnecting')
@@ -156,14 +157,14 @@ class VideoStream:
             self.Q.clear()
 
         while not self.stream.isOpened():
-            print(str(datetime.now()), 'Reconnecting to', self.camName)
+            print(str(datetime.now()), 'Reconnecting to', self.video_feed_name)
             self.stream = cv2.VideoCapture(self.src)
         if not self.stream.isOpened():
-            return ('error opening {}'.format(self.camName))
+            return ('error opening {}'.format(self.video_feed_name))
 
         if not self.inited:
             self.init_src()
 
-        print('VideoStream for {} initialised!'.format(self.camName))
+        print('VideoStream for {} initialised!'.format(self.video_feed_name))
         self.pauseTime = None
         self.start()

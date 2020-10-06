@@ -2,13 +2,13 @@ import numpy as np
 
 
 class VideoManager:
-    def __init__(self, camNames, streams, queueSize=5, writeDir=None, reconnectThreshold=20, max_height=720,
+    def __init__(self, video_feed_names, streams, queueSize=5, writeDir=None, reconnectThreshold=20, max_height=720,
                  isVideoFile=True, method='cv2'):
         self.max_height = max_height
         self.num_vid_streams = len(streams)
         self.stopped = True
 
-        assert len(streams) == len(camNames), 'streams and camNames should be the same length'
+        assert len(streams) == len(video_feed_names), 'streams and camNames should be the same length'
         self.videos = []
 
         if (method == 'cv2'):
@@ -16,7 +16,7 @@ class VideoManager:
         elif (method == 'vlc'):
             from video_getter_vlc import VideoStream
 
-        for i, camName in enumerate(camNames):
+        for i, camName in enumerate(video_feed_names):
             stream = VideoStream(camName, streams[i], queueSize=queueSize, writeDir=writeDir,
                                  reconnectThreshold=reconnectThreshold, isVideoFile=isVideoFile)
 
@@ -57,16 +57,13 @@ class VideoManager:
         return all_info
 
     def read(self):
-        statuses = []
         frames = []
 
         for vid in self.videos:
-            if not vid['stream'].more():
-                frames.append([])
-                statuses.append(False)
+            if not vid['stream'].more():  # Frame not here yet
+                frames.append([])  # Maintain frames size(frame from each video feed)
             else:
                 frame = vid['stream'].read()
                 frames.append(frame)
-                statuses.append(True)
 
-        return statuses, frames
+        return frames
