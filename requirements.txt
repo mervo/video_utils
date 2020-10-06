@@ -1,0 +1,3 @@
+opencv-python
+python-vlc
+ffmpeg-python
