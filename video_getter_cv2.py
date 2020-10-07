@@ -13,32 +13,33 @@ class VideoStream:
     with a dedicated thread.
     """
 
-    def __init__(self, video_feed_name, src, isVideoFile=True, queueSize=5, writeDir=None, reconnectThreshold=20,
+    def __init__(self, video_feed_name, src, is_video_file=True, queue_size=3, recording_dir=None,
+                 reconnect_threshold_sec=20,
                  resize_fn=None):
         self.video_feed_name = video_feed_name
         self.src = src
         self.stream = cv2.VideoCapture(self.src)
-        self.reconnectThreshold = reconnectThreshold
+        self.reconnect_threshold_sec = reconnect_threshold_sec
         self.pauseTime = None
         self.stopped = True
-        self.Q = deque(maxlen=queueSize)
+        self.Q = deque(maxlen=queue_size)  # Maximum size of a deque or None if unbounded.
         self.resize_fn = resize_fn
         self.inited = False
-        self.isVideoFile = isVideoFile
+        self.is_video_file = is_video_file
         self.vidInfo = {}
-        self.writeDir = writeDir
+        self.recording_dir = recording_dir
 
-        if self.writeDir is not None:
+        if self.recording_dir is not None:
             self.record_tracks = True
-            if not os.path.isdir(self.writeDir):
-                os.makedirs(self.writeDir)
+            if not os.path.isdir(self.recording_dir):
+                os.makedirs(self.recording_dir)
         else:
             self.record_tracks = False
 
     def init_src(self):
         try:
             self.stream = cv2.VideoCapture(self.src)
-            if self.isVideoFile:
+            if self.is_video_file:
                 self.fps = int(self.stream.get(cv2.CAP_PROP_FPS))
             else:
                 self.fps = int(os.environ.get('ORIG_FPS', 15))
@@ -58,7 +59,7 @@ class VideoStream:
                 now = datetime.now()
                 day = now.strftime("%Y_%m_%d_%H-%M-%S")
                 out_vid_fp = os.path.join(
-                    self.writeDir, 'orig_{}_{}.avi'.format(self.video_feed_name, day))
+                    self.recording_dir, 'orig_{}_{}.avi'.format(self.video_feed_name, day))
                 self.out_vid = cv2.VideoWriter(out_vid_fp, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), int(
                     self.fps), (self.vid_width, self.vid_height))
 
@@ -95,7 +96,7 @@ class VideoStream:
                         except Exception as e:
                             pass
 
-                    if self.isVideoFile:
+                    if self.is_video_file:
                         time.sleep(1 / self.fps)
 
             except Exception as e:
@@ -107,15 +108,15 @@ class VideoStream:
                     self.pauseTime = time.time()
                     self.printTime = time.time()
                     print('No frames for {}, starting {:0.1f}sec countdown to reconnect.'. \
-                          format(self.video_feed_name, self.reconnectThreshold))
+                          format(self.video_feed_name, self.reconnect_threshold_sec))
                 time_since_pause = time.time() - self.pauseTime
                 time_since_print = time.time() - self.printTime
                 if time_since_print > 1:  # prints only every 1 sec
                     print('No frames for {}, reconnect starting in {:0.1f}sec'. \
-                          format(self.video_feed_name, self.reconnectThreshold - time_since_pause))
+                          format(self.video_feed_name, self.reconnect_threshold_sec - time_since_pause))
                     self.printTime = time.time()
 
-                if time_since_pause > self.reconnectThreshold:
+                if time_since_pause > self.reconnect_threshold_sec:
                     self.reconnect_start()
                     break
                 continue

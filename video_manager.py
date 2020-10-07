@@ -2,8 +2,8 @@ import numpy as np
 
 
 class VideoManager:
-    def __init__(self, video_feed_names, streams, queueSize=5, writeDir=None, reconnectThreshold=20, max_height=720,
-                 isVideoFile=True, method='cv2'):
+    def __init__(self, video_feed_names, streams, queue_size=5, recording_dir=None, reconnect_threshold_sec=20, max_height=720,
+                 is_video_file=True, method='cv2'):
         self.max_height = max_height
         self.num_vid_streams = len(streams)
         self.stopped = True
@@ -17,8 +17,8 @@ class VideoManager:
             from video_getter_vlc import VideoStream
 
         for i, camName in enumerate(video_feed_names):
-            stream = VideoStream(camName, streams[i], queueSize=queueSize, writeDir=writeDir,
-                                 reconnectThreshold=reconnectThreshold, isVideoFile=isVideoFile)
+            stream = VideoStream(camName, streams[i], queue_size=queue_size, recording_dir=recording_dir,
+                                 reconnect_threshold_sec=reconnect_threshold_sec, is_video_file=is_video_file)
 
             self.videos.append({'camName': camName, 'stream': stream})
 

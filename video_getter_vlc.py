@@ -1,8 +1,4 @@
-import os
 import time
-from collections import deque
-from datetime import datetime
-from threading import Thread
 
 import cv2
 import vlc
@@ -15,10 +11,11 @@ class VideoStream(video_getter_cv2.VideoStream):
     Class that uses vlc instead of cv2 to continuously get frames with a dedicated thread as a workaround for artifacts.
     """
 
-    def __init__(self, video_feed_name, src, isVideoFile=True, queueSize=5, writeDir=None, reconnectThreshold=20,
+    def __init__(self, video_feed_name, src, is_video_file=True, queue_size=3, recording_dir=None,
+                 reconnect_threshold_sec=20,
                  resize_fn=None):
-        video_getter_cv2.VideoStream.__init__(self, video_feed_name, src, isVideoFile, queueSize, writeDir,
-                                              reconnectThreshold,
+        video_getter_cv2.VideoStream.__init__(self, video_feed_name, src, is_video_file, queue_size, recording_dir,
+                                              reconnect_threshold_sec,
                                               resize_fn)
 
         self.fixed_png_path = 'vlc_frame_{}.png'.format(video_feed_name)
@@ -45,7 +42,7 @@ class VideoStream(video_getter_cv2.VideoStream):
                         except Exception as e:
                             pass
 
-                    if self.isVideoFile:
+                    if self.is_video_file:
                         time.sleep(1 / self.fps)
 
             except Exception as e:
@@ -57,15 +54,15 @@ class VideoStream(video_getter_cv2.VideoStream):
                     self.pauseTime = time.time()
                     self.printTime = time.time()
                     print('No frames for {}, starting {:0.1f}sec countdown to reconnect.'. \
-                          format(self.video_feed_name, self.reconnectThreshold))
+                          format(self.video_feed_name, self.reconnect_threshold_sec))
                 time_since_pause = time.time() - self.pauseTime
                 time_since_print = time.time() - self.printTime
                 if time_since_print > 1:  # prints only every 1 sec
                     print('No frames for {}, reconnect starting in {:0.1f}sec'. \
-                          format(self.video_feed_name, self.reconnectThreshold - time_since_pause))
+                          format(self.video_feed_name, self.reconnect_threshold_sec - time_since_pause))
                     self.printTime = time.time()
 
-                if time_since_pause > self.reconnectThreshold:
+                if time_since_pause > self.reconnect_threshold_sec:
                     self.reconnect_start()
                     break
                 continue
