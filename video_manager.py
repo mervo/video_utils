@@ -1,8 +1,6 @@
-import numpy as np
-
-
 class VideoManager:
-    def __init__(self, video_feed_names, streams, queue_size=5, recording_dir=None, reconnect_threshold_sec=20, max_height=720,
+    def __init__(self, video_feed_names, streams, queue_size=5, recording_dir=None, reconnect_threshold_sec=20,
+                 max_height=720,
                  is_video_file=True, method='cv2'):
         self.max_height = max_height
         self.num_vid_streams = len(streams)
