@@ -1,7 +1,20 @@
 class VideoManager:
-    def __init__(self, video_feed_names, streams, queue_size=5, recording_dir=None, reconnect_threshold_sec=20,
+    def __init__(self, video_feed_names, streams, queue_size=3, recording_dir=None, reconnect_threshold_sec=20,
                  max_height=720,
                  is_video_file=True, method='cv2'):
+        """VideoManager that helps with multiple concurrent video streams
+
+        Args:
+            video_feed_names (list): List of human readable strings for ease of identifying video source
+            streams (list): List of strings of file paths or rtsp streams
+            queue_size (int): No. of frames to buffer in memory to prevent blocking I/O operations (https://www.pyimagesearch.com/2017/02/06/faster-video-file-fps-with-cv2-videocapture-and-opencv/)
+            recording_dir (str): Path to folder to record source video, None to disable recording.
+            reconnect_threshold_sec (int): Min seconds between reconnection attempts
+            max_height(int): Max height of video in px
+            is_video_file (bool): True if video file, False if RTSP stream
+            method (str): 'cv2' or 'vlc', 'vlc' is slower but more robust to artifacting
+        """
+
         self.max_height = max_height
         self.num_vid_streams = len(streams)
         self.stopped = True
@@ -48,7 +61,7 @@ class VideoManager:
         for i, vid in enumerate(self.videos):
             vid['info'] = vid['stream'].vidInfo
 
-    def getAllInfo(self):
+    def get_all_videos_information(self):
         all_info = []
         for vid in self.videos:
             all_info.append(vid['stream'].vidInfo)

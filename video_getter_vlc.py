@@ -18,7 +18,7 @@ class VideoStream(video_getter_cv2.VideoStream):
                                               reconnect_threshold_sec,
                                               resize_fn)
 
-        self.fixed_png_path = 'vlc_frame_{}.png'.format(video_feed_name)
+        self.fixed_png_path = 'temp_vlc_frame_{}.png'.format(video_feed_name)
         self.stream = cv2.VideoCapture(self.src)
         self.vlc_instance = vlc.Instance('--vout=dummy --aout=dummy')
         self.vlc_player = self.vlc_instance.media_player_new()

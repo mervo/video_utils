@@ -10,11 +10,6 @@ get_your_config_from_env_var = os.environ.get('CONFIG_NAME', 'default_value_if_n
 Sample code on usage for concurrent streams
 '''
 if __name__ == '__main__':
-    # vidManager = VideoManager(camNames='RTSP'.split(','),
-    #                           streams='rtsp://wowzaec2demo.streamlock.net/vod/mp4:BigBuckBunny_115k.mov'.split(','),
-    #                           isVideoFile=False, queueSize=2, writeDir='./output',
-    #                           reconnectThreshold=1, max_height=1080, method='cv2')
-
     vidManager = VideoManager(video_feed_names=['File', 'RTSP'],
                               streams=['/data/datasets/drone/macritchie-reservoir.mp4',
                                        'rtsp://wowzaec2demo.streamlock.net/vod/mp4:BigBuckBunny_115k.mov'],
@@ -22,7 +17,7 @@ if __name__ == '__main__':
                               reconnect_threshold_sec=1, max_height=1080, method='cv2')
 
     vidManager.start()
-    print(f'{vidManager.getAllInfo()}')
+    print(f'{vidManager.get_all_videos_information()}')
 
     for frame_count in itertools.count():
         frame_of_each_video_feed = vidManager.read()  # frames is list of arrays from 0 - 255, dtype uint8
@@ -34,5 +29,3 @@ if __name__ == '__main__':
             break
 
     vidManager.stop()
-
-    # TODO refactor to underscores, fix imports, cleanup, write README
