@@ -23,9 +23,9 @@ class VideoManager:
         self.videos = []
 
         if (method == 'cv2'):
-            from video_getter_cv2 import VideoStream
+            from .video_getter_cv2 import VideoStream
         elif (method == 'vlc'):
-            from video_getter_vlc import VideoStream
+            from .video_getter_vlc import VideoStream
 
         for i, camName in enumerate(video_feed_names):
             stream = VideoStream(camName, streams[i], queue_size=queue_size, recording_dir=recording_dir,
