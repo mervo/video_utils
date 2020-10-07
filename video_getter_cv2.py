@@ -13,7 +13,7 @@ class VideoStream:
     with a dedicated thread.
     """
 
-    def __init__(self, video_feed_name, src, is_video_file=True, queue_size=3, recording_dir=None,
+    def __init__(self, video_feed_name, src, manual_video_fps, queue_size=3, recording_dir=None,
                  reconnect_threshold_sec=20,
                  resize_fn=None):
         self.video_feed_name = video_feed_name
@@ -25,7 +25,7 @@ class VideoStream:
         self.Q = deque(maxlen=queue_size)  # Maximum size of a deque or None if unbounded.
         self.resize_fn = resize_fn
         self.inited = False
-        self.is_video_file = is_video_file
+        self.manual_video_fps = manual_video_fps
         self.vidInfo = {}
         self.recording_dir = recording_dir
 
@@ -39,14 +39,15 @@ class VideoStream:
     def init_src(self):
         try:
             self.stream = cv2.VideoCapture(self.src)
-            if self.is_video_file:
+            if not self.manual_video_fps:
                 self.fps = int(self.stream.get(cv2.CAP_PROP_FPS))
             else:
-                self.fps = int(os.environ.get('ORIG_FPS', 15))
+                self.fps = self.manual_video_fps
             # width and height returns 0 if stream not captured
             self.vid_width = int(self.stream.get(3))
             self.vid_height = int(self.stream.get(4))
             self.vidInfo = {'video_feed_name': self.video_feed_name, 'height': self.vid_height, 'width': self.vid_width,
+                            'manual_fps_inputted': self.manual_video_fps is not None,
                             'fps': self.fps, 'inited': False}
 
             self.out_vid = None
@@ -96,8 +97,7 @@ class VideoStream:
                         except Exception as e:
                             pass
 
-                    if self.is_video_file:
-                        time.sleep(1 / self.fps)
+                    time.sleep(1 / self.fps)
 
             except Exception as e:
                 print('stream grab {} error: {}'.format(self.video_feed_name, e))

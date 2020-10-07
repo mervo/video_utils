@@ -1,17 +1,18 @@
 class VideoManager:
-    def __init__(self, video_feed_names, streams, queue_size=3, recording_dir=None, reconnect_threshold_sec=20,
+    def __init__(self, video_feed_names, streams, manual_video_fps, queue_size=3, recording_dir=None,
+                 reconnect_threshold_sec=20,
                  max_height=720,
-                 is_video_file=True, method='cv2'):
+                 method='cv2'):
         """VideoManager that helps with multiple concurrent video streams
 
         Args:
             video_feed_names (list): List of human readable strings for ease of identifying video source
             streams (list): List of strings of file paths or rtsp streams
+            manual_video_fps (list): List of fps(int) for each stream, None if fps information available from video source
             queue_size (int): No. of frames to buffer in memory to prevent blocking I/O operations (https://www.pyimagesearch.com/2017/02/06/faster-video-file-fps-with-cv2-videocapture-and-opencv/)
             recording_dir (str): Path to folder to record source video, None to disable recording.
             reconnect_threshold_sec (int): Min seconds between reconnection attempts
             max_height(int): Max height of video in px
-            is_video_file (bool): True if video file, False if RTSP stream
             method (str): 'cv2' or 'vlc', 'vlc' is slower but more robust to artifacting
         """
 
@@ -23,15 +24,18 @@ class VideoManager:
         self.videos = []
 
         if (method == 'cv2'):
-            from .video_getter_cv2 import VideoStream
+            from video_getter_cv2 import VideoStream
         elif (method == 'vlc'):
-            from .video_getter_vlc import VideoStream
+            from video_getter_vlc import VideoStream
+        else:
+            from .video_getter_cv2 import VideoStream
 
-        for i, camName in enumerate(video_feed_names):
-            stream = VideoStream(camName, streams[i], queue_size=queue_size, recording_dir=recording_dir,
-                                 reconnect_threshold_sec=reconnect_threshold_sec, is_video_file=is_video_file)
+        for i, video_feed_name in enumerate(video_feed_names):
+            stream = VideoStream(video_feed_name, streams[i], manual_video_fps=manual_video_fps[i],
+                                 queue_size=queue_size, recording_dir=recording_dir,
+                                 reconnect_threshold_sec=reconnect_threshold_sec)
 
-            self.videos.append({'camName': camName, 'stream': stream})
+            self.videos.append({'video_feed_name': video_feed_name, 'stream': stream})
 
     # def _resize(self, frame):
     # 	height, width = frame.shape[:2]

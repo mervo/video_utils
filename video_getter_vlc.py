@@ -3,7 +3,7 @@ import time
 import cv2
 import vlc
 
-from . import video_getter_cv2
+import video_getter_cv2
 
 
 class VideoStream(video_getter_cv2.VideoStream):
@@ -11,10 +11,10 @@ class VideoStream(video_getter_cv2.VideoStream):
     Class that uses vlc instead of cv2 to continuously get frames with a dedicated thread as a workaround for artifacts.
     """
 
-    def __init__(self, video_feed_name, src, is_video_file=True, queue_size=3, recording_dir=None,
+    def __init__(self, video_feed_name, src, manual_video_fps, queue_size=3, recording_dir=None,
                  reconnect_threshold_sec=20,
                  resize_fn=None):
-        video_getter_cv2.VideoStream.__init__(self, video_feed_name, src, is_video_file, queue_size, recording_dir,
+        video_getter_cv2.VideoStream.__init__(self, video_feed_name, src, manual_video_fps, queue_size, recording_dir,
                                               reconnect_threshold_sec,
                                               resize_fn)
 
@@ -42,8 +42,7 @@ class VideoStream(video_getter_cv2.VideoStream):
                         except Exception as e:
                             pass
 
-                    if self.is_video_file:
-                        time.sleep(1 / self.fps)
+                    time.sleep(1 / self.fps)
 
             except Exception as e:
                 print('stream grab error:{}'.format(e))
