@@ -42,6 +42,11 @@ class VideoStream(video_getter_cv2.VideoStream):
 
     def get(self):
         self.vlc_player.play()
+        # Known Issue: This needs to be called again after "play()" for the video feed to start coming in, unable to figure out why
+        self.vlc_player = self.vlc_instance.media_player_new()
+        self.vlc_player.set_mrl(self.src)
+        self.vlc_player.play()
+
         while not self.stopped:
             try:
                 res = self.vlc_player.video_take_snapshot(0, self.fixed_png_path, 0, 0)
@@ -102,6 +107,7 @@ class VideoStream(video_getter_cv2.VideoStream):
             self.vlc_player.stop()
             self.vlc_player.release()
 
+        # Known Issue: This needs to be called again after "play()" for the video feed to start coming in, unable to figure out why
         self.vlc_player = self.vlc_instance.media_player_new()
         self.vlc_player.set_mrl(self.src)
 
