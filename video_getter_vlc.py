@@ -44,7 +44,6 @@ class VideoStream(video_getter_cv2.VideoStream):
         self.vlc_player.play()
         while not self.stopped:
             try:
-                # print('getting video' + str(time.time()))
                 res = self.vlc_player.video_take_snapshot(0, self.fixed_png_path, 0, 0)
                 grabbed = (res >= 0)
 
@@ -91,13 +90,10 @@ class VideoStream(video_getter_cv2.VideoStream):
                 self.vlc_player.release()
                 self.vlc_instance.release()
 
-            if self.record_source_video and self.out_vid:
-                self.out_vid.release()
-
             print('stop video streaming for {}'.format(self.video_feed_name))
 
     def reconnect(self):
-        print('Reconnecting')
+        print('Reconnecting...')
 
         if self.more():
             self.Q.clear()
@@ -109,7 +105,7 @@ class VideoStream(video_getter_cv2.VideoStream):
         self.vlc_player = self.vlc_instance.media_player_new()
         self.vlc_player.set_mrl(self.src)
 
-        if self.record_source_video and not self.inited:
+        if not self.inited:
             self.init_src()
 
         print('VideoStream for {} initialised!'.format(self.video_feed_name))
