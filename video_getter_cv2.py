@@ -56,16 +56,19 @@ class VideoStream:
                 self.inited = True
                 self.vidInfo['inited'] = True
 
-            if self.record_source_video and self.inited:
-                now = datetime.now()
-                day = now.strftime("%Y_%m_%d_%H-%M-%S")
-                out_vid_fp = os.path.join(
-                    self.recording_dir, 'orig_{}_{}.avi'.format(self.video_feed_name, day))
-                self.out_vid = cv2.VideoWriter(out_vid_fp, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), int(
-                    self.fps), (self.vid_width, self.vid_height))
+            self.__init_src_recorder()
 
         except Exception as error:
             print('init stream {} error: {}'.format(self.video_feed_name, error))
+
+    def __init_src_recorder(self):
+        if self.record_source_video and self.inited:
+            now = datetime.now()
+            day = now.strftime("%Y_%m_%d_%H-%M-%S")
+            out_vid_fp = os.path.join(
+                self.recording_dir, 'orig_{}_{}.avi'.format(self.video_feed_name, day))
+            self.out_vid = cv2.VideoWriter(out_vid_fp, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), int(
+                self.fps), (self.vid_width, self.vid_height))
 
     def start(self):
         self.init_src()

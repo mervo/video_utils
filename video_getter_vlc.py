@@ -1,3 +1,5 @@
+from datetime import datetime
+import os
 import time
 
 import cv2
@@ -19,14 +21,24 @@ class VideoStream(video_getter_cv2.VideoStream):
                                               resize_fn)
 
         self.fixed_png_path = 'temp_vlc_frame_{}.png'.format(video_feed_name)
-        self.stream = cv2.VideoCapture(self.src)
         self.vlc_instance = vlc.Instance('--vout=dummy --aout=dummy')
         self.vlc_player = self.vlc_instance.media_player_new()
-        self.vlc_player.set_mrl(self.src)
 
-    def record_video(self, frame):
-        self.out_vid.write(frame)
-        time.sleep(1 / self.fps)
+        if self.record_source_video:
+            now = datetime.now()
+            day = now.strftime("%Y_%m_%d_%H-%M-%S")
+            out_vid_fp = os.path.join(
+                self.recording_dir, 'orig_{}_{}.mp4'.format(self.video_feed_name, day))
+            self.vlc_media = self.vlc_instance.media_new(self.src,
+                                                         f'sout=#duplicate{{dst=display,dst=std{{access=file,mux=ts,dst={out_vid_fp}}}')
+        else:
+            self.vlc_media = self.vlc_instance.media_new(self.src)
+
+        self.vlc_player.set_media(self.vlc_media)
+
+    def __init_src_recorder(self):
+        # disable video_getter_cv2 cv2.VideoWriter
+        pass
 
     def get(self):
         self.vlc_player.play()
@@ -39,12 +51,6 @@ class VideoStream(video_getter_cv2.VideoStream):
                 if grabbed:
                     frame = cv2.imread(self.fixed_png_path)
                     self.Q.appendleft(frame)
-
-                    if self.record_source_video:
-                        try:
-                            self.out_vid.write(frame)
-                        except Exception as e:
-                            pass
 
                     time.sleep(1 / self.fps)
 
@@ -76,9 +82,6 @@ class VideoStream(video_getter_cv2.VideoStream):
         if not self.stopped:
             self.stopped = True
             time.sleep(0.1)
-
-            # if self.stream:
-            # self.stream.release()
 
             if self.more():
                 self.Q.clear()
