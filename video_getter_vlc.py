@@ -24,6 +24,10 @@ class VideoStream(video_getter_cv2.VideoStream):
         self.vlc_player = self.vlc_instance.media_player_new()
         self.vlc_player.set_mrl(self.src)
 
+    def record_video(self, frame):
+        self.out_vid.write(frame)
+        time.sleep(1 / self.fps)
+
     def get(self):
         self.vlc_player.play()
         while not self.stopped:
@@ -36,7 +40,7 @@ class VideoStream(video_getter_cv2.VideoStream):
                     frame = cv2.imread(self.fixed_png_path)
                     self.Q.appendleft(frame)
 
-                    if self.record_tracks:
+                    if self.record_source_video:
                         try:
                             self.out_vid.write(frame)
                         except Exception as e:
@@ -84,7 +88,7 @@ class VideoStream(video_getter_cv2.VideoStream):
                 self.vlc_player.release()
                 self.vlc_instance.release()
 
-            if self.record_tracks and self.out_vid:
+            if self.record_source_video and self.out_vid:
                 self.out_vid.release()
 
             print('stop video streaming for {}'.format(self.video_feed_name))
@@ -102,7 +106,7 @@ class VideoStream(video_getter_cv2.VideoStream):
         self.vlc_player = self.vlc_instance.media_player_new()
         self.vlc_player.set_mrl(self.src)
 
-        if self.record_tracks and not self.inited:
+        if self.record_source_video and not self.inited:
             self.init_src()
 
         print('VideoStream for {} initialised!'.format(self.video_feed_name))

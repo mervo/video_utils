@@ -30,11 +30,11 @@ class VideoStream:
         self.recording_dir = recording_dir
 
         if self.recording_dir is not None:
-            self.record_tracks = True
+            self.record_source_video = True
             if not os.path.isdir(self.recording_dir):
                 os.makedirs(self.recording_dir)
         else:
-            self.record_tracks = False
+            self.record_source_video = False
 
     def init_src(self):
         try:
@@ -56,7 +56,7 @@ class VideoStream:
                 self.inited = True
                 self.vidInfo['inited'] = True
 
-            if self.record_tracks and self.inited:
+            if self.record_source_video and self.inited:
                 now = datetime.now()
                 day = now.strftime("%Y_%m_%d_%H-%M-%S")
                 out_vid_fp = os.path.join(
@@ -91,7 +91,7 @@ class VideoStream:
                 if grabbed:
                     self.Q.appendleft(frame)
 
-                    if self.record_tracks:
+                    if self.record_source_video:
                         try:
                             self.out_vid.write(frame)
                         except Exception as e:

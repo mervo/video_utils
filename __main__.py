@@ -17,7 +17,7 @@ if __name__ == '__main__':
     vidManager = VideoManager(video_feed_names=['File', 'RTSP'],
                               streams=['/data/datasets/drone/macritchie-reservoir.mp4',
                                        'rtsp://wowzaec2demo.streamlock.net/vod/mp4:BigBuckBunny_115k.mov'],
-                              manual_video_fps=[None, None], queue_size=2, recording_dir=None,
+                              manual_video_fps=[None, None], queue_size=2, recording_dir='./video_utils/output',
                               reconnect_threshold_sec=10, max_height=1080, method='cv2')
 
     vidManager.start()
