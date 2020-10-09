@@ -12,7 +12,7 @@ video_feed_names = os.environ.get('VIDEO_FEED_NAMES',
                                   'FILE1,RTSP2')
 streams = os.environ.get('STREAMS',
                          '/data/datasets/drone/macritchie-reservoir.mp4,rtsp://wowzaec2demo.streamlock.net/vod/mp4:BigBuckBunny_115k.mov')
-manual_video_fps = os.environ.get('MANUAL_VIDEO_FPS', '-1,-1')
+manual_video_fps = os.environ.get('MANUAL_VIDEO_FPS', '-1,-1') # -1 to try to read from video stream metadata
 
 queue_size = int(os.environ.get('QUEUE_SIZE', 2))
 recording_dir = os.environ.get('RECORDING_DIR', None)
