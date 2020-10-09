@@ -25,7 +25,10 @@ class VideoStream:
         self.Q = deque(maxlen=queue_size)  # Maximum size of a deque or None if unbounded.
         self.resize_fn = resize_fn
         self.inited = False
-        self.manual_video_fps = manual_video_fps
+        if (manual_video_fps == -1):
+            self.manual_video_fps = None
+        else:
+            self.manual_video_fps = manual_video_fps
         self.vidInfo = {}
         self.recording_dir = recording_dir
 

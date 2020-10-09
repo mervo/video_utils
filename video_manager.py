@@ -31,7 +31,7 @@ class VideoManager:
             from .video_getter_cv2 import VideoStream
 
         for i, video_feed_name in enumerate(video_feed_names):
-            stream = VideoStream(video_feed_name, streams[i], int(manual_video_fps=manual_video_fps[i]),
+            stream = VideoStream(video_feed_name, streams[i], manual_video_fps=int(manual_video_fps[i]),
                                  queue_size=int(queue_size), recording_dir=recording_dir,
                                  reconnect_threshold_sec=int(reconnect_threshold_sec))
 

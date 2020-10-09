@@ -7,6 +7,19 @@ from .video_manager import VideoManager
 
 get_your_config_from_env_var = os.environ.get('CONFIG_NAME', 'default_value_if_not_set')
 
+# comma separated strings
+video_feed_names = os.environ.get('VIDEO_FEED_NAMES',
+                                  'FILE1,RTSP2')
+streams = os.environ.get('STREAMS',
+                         '/data/datasets/drone/macritchie-reservoir.mp4,rtsp://wowzaec2demo.streamlock.net/vod/mp4:BigBuckBunny_115k.mov')
+manual_video_fps = os.environ.get('MANUAL_VIDEO_FPS', '-1,-1')
+
+queue_size = int(os.environ.get('QUEUE_SIZE', 2))
+recording_dir = os.environ.get('RECORDING_DIR', None)
+reconnect_threshold_sec = int(os.environ.get('RECONNECT_THRESHOLD_SEC', 5))
+max_height = int(os.environ.get('MAX_HEIGHT', 1080))
+method = os.environ.get('METHOD', 'cv2')
+
 '''
 Sample code on usage for concurrent streams
 Run from one level above video_utils (video_utils should be treated as a module, this file just acts as a crash course/demo: `python3 -m video_utils .`
@@ -14,11 +27,11 @@ Run from one level above video_utils (video_utils should be treated as a module,
 if __name__ == '__main__':
     frame_drawer = FrameDrawer()
 
-    vidManager = VideoManager(video_feed_names=['File', 'RTSP'],
-                              streams=['/data/datasets/drone/macritchie-reservoir.mp4',
-                                       'rtsp://wowzaec2demo.streamlock.net/vod/mp4:BigBuckBunny_115k.mov'],
-                              manual_video_fps=[None, None], queue_size=2, recording_dir='./video_utils/output',
-                              reconnect_threshold_sec=5, max_height=1080, method='vlc')
+    vidManager = VideoManager(video_feed_names=video_feed_names.split(','),
+                              streams=streams.split(','),
+                              manual_video_fps=manual_video_fps.split(','), queue_size=queue_size,
+                              recording_dir=recording_dir,
+                              reconnect_threshold_sec=reconnect_threshold_sec, max_height=max_height, method=method)
 
     vidManager.start()
     print(f'{vidManager.get_all_videos_information()}')
