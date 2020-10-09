@@ -16,7 +16,7 @@ class VideoManager:
             method (str): 'cv2' or 'vlc', 'vlc' is slower but more robust to artifacting
         """
 
-        self.max_height = max_height
+        self.max_height = int(max_height)
         self.num_vid_streams = len(streams)
         self.stopped = True
 
@@ -31,9 +31,9 @@ class VideoManager:
             from .video_getter_cv2 import VideoStream
 
         for i, video_feed_name in enumerate(video_feed_names):
-            stream = VideoStream(video_feed_name, streams[i], manual_video_fps=manual_video_fps[i],
-                                 queue_size=queue_size, recording_dir=recording_dir,
-                                 reconnect_threshold_sec=reconnect_threshold_sec)
+            stream = VideoStream(video_feed_name, streams[i], int(manual_video_fps=manual_video_fps[i]),
+                                 queue_size=int(queue_size), recording_dir=recording_dir,
+                                 reconnect_threshold_sec=int(reconnect_threshold_sec))
 
             self.videos.append({'video_feed_name': video_feed_name, 'stream': stream})
 
