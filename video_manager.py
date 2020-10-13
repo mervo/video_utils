@@ -8,7 +8,7 @@ class VideoManager:
         Args:
             video_feed_names (list): List of human readable strings for ease of identifying video source
             streams (list): List of strings of file paths or rtsp streams
-            manual_video_fps (list): List of fps(int) for each stream, None if fps information available from video source
+            manual_video_fps (list): List of fps(int) for each stream, -1 if fps information available from video source
             queue_size (int): No. of frames to buffer in memory to prevent blocking I/O operations (https://www.pyimagesearch.com/2017/02/06/faster-video-file-fps-with-cv2-videocapture-and-opencv/)
             recording_dir (str): Path to folder to record source video, None to disable recording.
             reconnect_threshold_sec (int): Min seconds between reconnection attempts, set higher for vlc to give it time to connect
