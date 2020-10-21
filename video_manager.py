@@ -37,6 +37,38 @@ class VideoManager:
 
             self.videos.append({'video_feed_name': video_feed_name, 'stream': stream})
 
+    @classmethod
+    def from_list_file(cls, list_file, **kwargs):
+        video_feed_names = []
+        streams = []
+        manual_video_fps = []
+        with open(list_file, 'r') as f:
+            for l in f.readlines():
+                l = l.strip()
+                splits = l.strip(',')
+                video_feed_names.append(splits[0])
+                url = splits[1]
+                sourcetype, path = url.split(':')
+                if sourcetype == 'usb':
+                    video_path = int(path)
+                elif sourcetype == 'file':
+                    video_path = path
+                    assert Path(video_path).is_file(),f'{video_path} is defined as file but it does not exist!'
+                else:
+                    assert sourcetype == 'rtsp' or sourcetype == 'http' or sourcetype == 'https',f'Source type given of {sourcetype} is not supported'
+                    video_path = path
+                streams.append(video_path)
+                
+                if len(splits) == 3:
+                    fps = float(splits[2])
+                    # fps = int(splits[2])
+                else:
+                    fps = -1
+                manual_video_fps.append(fps)
+
+
+        return cls(video_feed_names, streams, manual_video_fps, **kwargs)
+
     # def _resize(self, frame):
     # 	height, width = frame.shape[:2]
     # 	if height != self.resize_height or width != self.resize_width:
