@@ -56,6 +56,8 @@ class VideoManager:
         with open(list_file, 'r') as f:
             for l in f.readlines():
                 l = l.strip()
+                if l.startswith('#'):
+                    continue
                 splits = l.split(',')
                 video_feed_names.append(splits[0])
                 url = splits[1]
