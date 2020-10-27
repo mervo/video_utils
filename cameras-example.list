@@ -1,0 +1,4 @@
+stream1,rtsp://192.168.1.39:554/stream
+stream2,rtsp://192.168.1.40:554/live.sdp
+webcam1,usb:0
+my_video_file,file:my_video_file.mp4,25

@@ -74,7 +74,9 @@ class VideoStream:
                 self.fps), (self.vid_width, self.vid_height))
 
     def start(self):
-        self.init_src()
+        if not self.inited:
+            self.init_src()
+    
         self.stopped = False
 
         t = Thread(target=self.get, args=())
