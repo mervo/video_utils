@@ -126,22 +126,27 @@ class VideoStream:
                 grabbed = False
 
             if not grabbed:
-                if self.pauseTime is None:
-                    self.pauseTime = time.time()
-                    self.printTime = time.time()
-                    print('No frames for {}, starting {:0.1f}sec countdown to reconnect.'. \
-                          format(self.video_feed_name, self.reconnect_threshold_sec))
-                time_since_pause = time.time() - self.pauseTime
-                time_since_print = time.time() - self.printTime
-                if time_since_print > 1:  # prints only every 1 sec
-                    print('No frames for {}, reconnect starting in {:0.1f}sec'. \
-                          format(self.video_feed_name, self.reconnect_threshold_sec - time_since_pause))
-                    self.printTime = time.time()
+                if self.reconnect_threshold_sec > 0:
+                    if self.pauseTime is None:
+                        self.pauseTime = time.time()
+                        self.printTime = time.time()
+                        print('No frames for {}, starting {:0.1f}sec countdown to reconnect.'. \
+                              format(self.video_feed_name, self.reconnect_threshold_sec))
+                    time_since_pause = time.time() - self.pauseTime
+                    time_since_print = time.time() - self.printTime
+                    if time_since_print > 1:  # prints only every 1 sec
+                        print('No frames for {}, reconnect starting in {:0.1f}sec'. \
+                              format(self.video_feed_name, self.reconnect_threshold_sec - time_since_pause))
+                        self.printTime = time.time()
 
-                if time_since_pause > self.reconnect_threshold_sec:
-                    self.reconnect_start()
+                    if time_since_pause > self.reconnect_threshold_sec:
+                        self.reconnect_start()
+                        break
+                    continue
+                else:
+                    print(f'No frames for {self.video_feed_name}. Not reconnecting. Stopping..')
+                    self.stop()
                     break
-                continue
 
             self.pauseTime = None
 

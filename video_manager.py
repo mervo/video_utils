@@ -113,6 +113,12 @@ class VideoManager:
             for vid in self.videos:
                 vid['stream'].stop()
 
+    def check_all_stopped(self):
+        return all(vid['stream'].stopped for vid in self.videos)
+
+    def check_any_stopped(self):
+        return all(vid['stream'].stopped for vid in self.videos)
+
     def update_info(self):
         for i, vid in enumerate(self.videos):
             vid['info'] = vid['stream'].vidInfo
