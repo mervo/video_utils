@@ -15,10 +15,12 @@ class VideoStream(video_getter_cv2.VideoStream):
 
     def __init__(self, video_feed_name, src, manual_video_fps, queue_size=3, recording_dir=None,
                  reconnect_threshold_sec=20,
-                 resize_fn=None):
+                 resize_fn=None,
+                 frame_crop=None):
         video_getter_cv2.VideoStream.__init__(self, video_feed_name, src, manual_video_fps, queue_size, recording_dir,
                                               reconnect_threshold_sec,
-                                              resize_fn)
+                                              resize_fn,
+                                              frame_crop)
 
         self.fixed_png_path = 'temp_vlc_frame_{}.png'.format(video_feed_name)
         self.vlc_instance = vlc.Instance('--vout=dummy --aout=dummy')
@@ -54,6 +56,10 @@ class VideoStream(video_getter_cv2.VideoStream):
 
                 if grabbed:
                     frame = cv2.imread(self.fixed_png_path)
+                    if self.frame_crop is not None:
+                        l,t,r,b = self.frame_crop
+                        frame = frame[t:b,l:r]
+
                     self.Q.appendleft(frame)
 
                     time.sleep(1 / self.fps)

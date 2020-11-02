@@ -3,8 +3,9 @@ from pathlib import Path
 class VideoManager:
     def __init__(self, video_feed_names, streams, manual_video_fps, queue_size=3, recording_dir=None,
                  reconnect_threshold_sec=20,
-                 max_height=1080,
-                 method='cv2'):
+                 max_height=None,
+                 method='cv2',
+                 frame_crop=None):
         """VideoManager that helps with multiple concurrent video streams
 
         Args:
@@ -16,9 +17,10 @@ class VideoManager:
             reconnect_threshold_sec (int): Min seconds between reconnection attempts, set higher for vlc to give it time to connect
             max_height(int): Max height of video in px
             method (str): 'cv2' or 'vlc', 'vlc' is slower but more robust to artifacting
+            frame_crop (list): LTRB coordinates for frame cropping 
         """
 
-        self.max_height = int(max_height)
+        # self.max_height = int(max_height)
         self.num_vid_streams = len(streams)
         self.stopped = True
 
@@ -33,9 +35,11 @@ class VideoManager:
             from .video_getter_cv2 import VideoStream
 
         for i, video_feed_name in enumerate(video_feed_names):
-            stream = VideoStream(video_feed_name, streams[i], manual_video_fps=int(manual_video_fps[i]),
-                                 queue_size=queue_size, recording_dir=recording_dir,
-                                 reconnect_threshold_sec=int(reconnect_threshold_sec))
+            stream = VideoStream(video_feed_name, streams[i], 
+                                manual_video_fps=int(manual_video_fps[i]),
+                                queue_size=queue_size, recording_dir=recording_dir,
+                                reconnect_threshold_sec=int(reconnect_threshold_sec),
+                                frame_crop=frame_crop)
 
             self.videos.append({'video_feed_name': video_feed_name, 'stream': stream})
 
@@ -70,7 +74,7 @@ class VideoManager:
                     assert Path(video_path).is_file(),f'{video_path} is defined as file but it does not exist!'
                 else:
                     assert sourcetype == 'rtsp' or sourcetype == 'http' or sourcetype == 'https',f'Source type given of {sourcetype} is not supported' # Unsure if there are other types of video network stream protocols/  
-                    video_path = path
+                    video_path = url
                     pure_files_only = False
                 streams.append(video_path)
                 
