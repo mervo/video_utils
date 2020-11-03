@@ -5,7 +5,8 @@ class VideoManager:
                  reconnect_threshold_sec=20,
                  max_height=None,
                  method='cv2',
-                 frame_crop=None):
+                 frame_crop=None,
+                 rtsp_tcp=True):
         """VideoManager that helps with multiple concurrent video streams
 
         Args:
@@ -18,6 +19,7 @@ class VideoManager:
             max_height(int): Max height of video in px
             method (str): 'cv2' or 'vlc', 'vlc' is slower but more robust to artifacting
             frame_crop (list): LTRB coordinates for frame cropping 
+            rtsp_tcp (bool): Only for 'vlc' method. Default is True. If rtsp stream is UDP, then setting to False will remove "--rtsp-tcp" flag from vlc command.  
         """
 
         # self.max_height = int(max_height)
@@ -39,7 +41,8 @@ class VideoManager:
                                 manual_video_fps=int(manual_video_fps[i]),
                                 queue_size=queue_size, recording_dir=recording_dir,
                                 reconnect_threshold_sec=int(reconnect_threshold_sec),
-                                frame_crop=frame_crop)
+                                frame_crop=frame_crop,
+                                rtsp_tcp=rtsp_tcp)
 
             self.videos.append({'video_feed_name': video_feed_name, 'stream': stream})
 
@@ -65,7 +68,7 @@ class VideoManager:
                 splits = l.split(',')
                 video_feed_names.append(splits[0])
                 url = splits[1]
-                sourcetype, path = url.split(':')
+                sourcetype, path = url.split(':', 1)
                 if sourcetype == 'usb':
                     video_path = int(path)
                     pure_files_only = False

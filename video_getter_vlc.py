@@ -16,14 +16,18 @@ class VideoStream(video_getter_cv2.VideoStream):
     def __init__(self, video_feed_name, src, manual_video_fps, queue_size=3, recording_dir=None,
                  reconnect_threshold_sec=20,
                  resize_fn=None,
-                 frame_crop=None):
+                 frame_crop=None,
+                 rtsp_tcp=True):
         video_getter_cv2.VideoStream.__init__(self, video_feed_name, src, manual_video_fps, queue_size, recording_dir,
                                               reconnect_threshold_sec,
                                               resize_fn,
                                               frame_crop)
 
         self.fixed_png_path = 'temp_vlc_frame_{}.png'.format(video_feed_name)
-        self.vlc_instance = vlc.Instance('--vout=dummy --aout=dummy --rtsp-tcp')
+        vlc_flags = '--vout=dummy --aout=dummy'
+        if rtsp_tcp:
+            vlc_flags += ' --rtsp-tcp'
+        self.vlc_instance = vlc.Instance(vlc_flags)
         self.vlc_player = self.vlc_instance.media_player_new()
 
         if self.record_source_video:

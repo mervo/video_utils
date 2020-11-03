@@ -16,7 +16,9 @@ class VideoStream:
     def __init__(self, video_feed_name, src, manual_video_fps, queue_size=3, recording_dir=None,
                  reconnect_threshold_sec=20,
                  resize_fn=None,
-                 frame_crop=None):
+                 frame_crop=None,
+                 rtsp_tcp=True):
+        # rtsp_tcp argument does nothing here. only for vlc. 
         self.video_feed_name = video_feed_name
         self.src = src
         self.stream = cv2.VideoCapture(self.src)
