@@ -15,7 +15,10 @@ class VideoStream:
 
     def __init__(self, video_feed_name, src, manual_video_fps, queue_size=3, recording_dir=None,
                  reconnect_threshold_sec=20,
-                 resize_fn=None):
+                 resize_fn=None,
+                 frame_crop=None,
+                 rtsp_tcp=True):
+        # rtsp_tcp argument does nothing here. only for vlc. 
         self.video_feed_name = video_feed_name
         self.src = src
         self.stream = cv2.VideoCapture(self.src)
@@ -38,6 +41,9 @@ class VideoStream:
                 os.makedirs(self.recording_dir)
         else:
             self.record_source_video = False
+        if frame_crop is not None:
+            assert len(frame_crop) == 4, 'Given FRAME CROP is invalid'
+        self.frame_crop = frame_crop
 
     def init_src(self):
         try:
@@ -47,8 +53,14 @@ class VideoStream:
             else:
                 self.fps = self.manual_video_fps
             # width and height returns 0 if stream not captured
-            self.vid_width = int(self.stream.get(3))
-            self.vid_height = int(self.stream.get(4))
+            if self.frame_crop is None:
+                self.vid_width = int(self.stream.get(3))
+                self.vid_height = int(self.stream.get(4))
+            else:
+                l,t,r,b = self.frame_crop
+                self.vid_width = r - l
+                self.vid_height = b - t            
+
             self.vidInfo = {'video_feed_name': self.video_feed_name, 'height': self.vid_height, 'width': self.vid_width,
                             'manual_fps_inputted': self.manual_video_fps is not None,
                             'fps': self.fps, 'inited': False}
@@ -97,6 +109,10 @@ class VideoStream:
                 grabbed, frame = self.stream.read()
 
                 if grabbed:
+                    if self.frame_crop is not None:
+                        l,t,r,b = self.frame_crop
+                        frame = frame[t:b,l:r]
+
                     self.Q.appendleft(frame)
 
                     if self.record_source_video:
@@ -112,22 +128,27 @@ class VideoStream:
                 grabbed = False
 
             if not grabbed:
-                if self.pauseTime is None:
-                    self.pauseTime = time.time()
-                    self.printTime = time.time()
-                    print('No frames for {}, starting {:0.1f}sec countdown to reconnect.'. \
-                          format(self.video_feed_name, self.reconnect_threshold_sec))
-                time_since_pause = time.time() - self.pauseTime
-                time_since_print = time.time() - self.printTime
-                if time_since_print > 1:  # prints only every 1 sec
-                    print('No frames for {}, reconnect starting in {:0.1f}sec'. \
-                          format(self.video_feed_name, self.reconnect_threshold_sec - time_since_pause))
-                    self.printTime = time.time()
+                if self.reconnect_threshold_sec > 0:
+                    if self.pauseTime is None:
+                        self.pauseTime = time.time()
+                        self.printTime = time.time()
+                        print('No frames for {}, starting {:0.1f}sec countdown to reconnect.'. \
+                              format(self.video_feed_name, self.reconnect_threshold_sec))
+                    time_since_pause = time.time() - self.pauseTime
+                    time_since_print = time.time() - self.printTime
+                    if time_since_print > 1:  # prints only every 1 sec
+                        print('No frames for {}, reconnect starting in {:0.1f}sec'. \
+                              format(self.video_feed_name, self.reconnect_threshold_sec - time_since_pause))
+                        self.printTime = time.time()
 
-                if time_since_pause > self.reconnect_threshold_sec:
-                    self.reconnect_start()
+                    if time_since_pause > self.reconnect_threshold_sec:
+                        self.reconnect_start()
+                        break
+                    continue
+                else:
+                    print(f'No frames for {self.video_feed_name}. Not reconnecting. Stopping..')
+                    self.stop()
                     break
-                continue
 
             self.pauseTime = None
 

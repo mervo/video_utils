@@ -15,13 +15,19 @@ class VideoStream(video_getter_cv2.VideoStream):
 
     def __init__(self, video_feed_name, src, manual_video_fps, queue_size=3, recording_dir=None,
                  reconnect_threshold_sec=20,
-                 resize_fn=None):
+                 resize_fn=None,
+                 frame_crop=None,
+                 rtsp_tcp=True):
         video_getter_cv2.VideoStream.__init__(self, video_feed_name, src, manual_video_fps, queue_size, recording_dir,
                                               reconnect_threshold_sec,
-                                              resize_fn)
+                                              resize_fn,
+                                              frame_crop)
 
         self.fixed_png_path = 'temp_vlc_frame_{}.png'.format(video_feed_name)
-        self.vlc_instance = vlc.Instance('--vout=dummy --aout=dummy')
+        vlc_flags = '--vout=dummy --aout=dummy'
+        if rtsp_tcp:
+            vlc_flags += ' --rtsp-tcp'
+        self.vlc_instance = vlc.Instance(vlc_flags)
         self.vlc_player = self.vlc_instance.media_player_new()
 
         if self.record_source_video:
@@ -54,6 +60,10 @@ class VideoStream(video_getter_cv2.VideoStream):
 
                 if grabbed:
                     frame = cv2.imread(self.fixed_png_path)
+                    if self.frame_crop is not None:
+                        l,t,r,b = self.frame_crop
+                        frame = frame[t:b,l:r]
+
                     self.Q.appendleft(frame)
 
                     time.sleep(1 / self.fps)
@@ -63,22 +73,27 @@ class VideoStream(video_getter_cv2.VideoStream):
                 grabbed = False
 
             if not grabbed:
-                if self.pauseTime is None:
-                    self.pauseTime = time.time()
-                    self.printTime = time.time()
-                    print('No frames for {}, starting {:0.1f}sec countdown to reconnect.'. \
-                          format(self.video_feed_name, self.reconnect_threshold_sec))
-                time_since_pause = time.time() - self.pauseTime
-                time_since_print = time.time() - self.printTime
-                if time_since_print > 1:  # prints only every 1 sec
-                    print('No frames for {}, reconnect starting in {:0.1f}sec'. \
-                          format(self.video_feed_name, self.reconnect_threshold_sec - time_since_pause))
-                    self.printTime = time.time()
+                if self.reconnect_threshold_sec > 0:
+                    if self.pauseTime is None:
+                        self.pauseTime = time.time()
+                        self.printTime = time.time()
+                        print('No frames for {}, starting {:0.1f}sec countdown to reconnect.'. \
+                              format(self.video_feed_name, self.reconnect_threshold_sec))
+                    time_since_pause = time.time() - self.pauseTime
+                    time_since_print = time.time() - self.printTime
+                    if time_since_print > 1:  # prints only every 1 sec
+                        print('No frames for {}, reconnect starting in {:0.1f}sec'. \
+                              format(self.video_feed_name, self.reconnect_threshold_sec - time_since_pause))
+                        self.printTime = time.time()
 
-                if time_since_pause > self.reconnect_threshold_sec:
-                    self.reconnect_start()
+                    if time_since_pause > self.reconnect_threshold_sec:
+                        self.reconnect_start()
+                        break
+                    continue
+                else:
+                    print(f'No frames for {self.video_feed_name}. Not reconnecting. Stopping..')
+                    self.stop()
                     break
-                continue
 
             self.pauseTime = None
 
