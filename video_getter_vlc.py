@@ -132,3 +132,7 @@ class VideoStream(video_getter_cv2.VideoStream):
         print('VideoStream for {} initialised!'.format(self.video_feed_name))
         self.pauseTime = None
         self.start()
+
+    def get_frame_time(self):
+        #Returns time elapsed since start of video, in milliseconds
+        return self.vlc_player.get_time()
