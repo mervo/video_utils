@@ -52,6 +52,13 @@ class VideoManager:
         Args:
         - list_file (str): Path to a txt file containing a list of camera info. Each row is <cam name>,<cam url>,<fps if applicable>. <cam url> is defined as "<source type>:<path>", where source type can be like "rtsp", "usb", "file" (see `cameras-example.list` for example)
 
+        E.g.
+        stream1,rtsp://192.168.1.39:554/stream
+        stream2,rtsp://192.168.1.40:554/live.sdp
+        webcam1,usb:0
+        my_video_file,file:my_video_file.mp4,25
+
+
         Note:
         - if all streams are files and queue_size is not given as an argument in kwargs, then queue_size will be set to None instead of default value of 3 as we do not want to drop any frames.
 

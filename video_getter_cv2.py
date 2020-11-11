@@ -19,8 +19,8 @@ class VideoStream:
                  frame_crop=None,
                  rtsp_tcp=True):
         # rtsp_tcp argument does nothing here. only for vlc. 
-        self.video_feed_name = video_feed_name
-        self.src = src
+        self.video_feed_name = video_feed_name # <cam name>
+        self.src = src # <path>
         self.stream = cv2.VideoCapture(self.src)
         self.reconnect_threshold_sec = reconnect_threshold_sec
         self.pauseTime = None
@@ -198,3 +198,7 @@ class VideoStream:
         print('VideoStream for {} initialised!'.format(self.video_feed_name))
         self.pauseTime = None
         self.start()
+
+    def get_frame_time(self):
+        #Returns time elapsed since start of video, in miliseconds
+        return self.stream.get(cv2.CAP_PROP_POS_MSEC) 
