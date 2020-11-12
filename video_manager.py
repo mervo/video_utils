@@ -3,10 +3,12 @@ from pathlib import Path
 class VideoManager:
     def __init__(self, video_feed_names, streams, manual_video_fps, queue_size=3, recording_dir=None,
                  reconnect_threshold_sec=20,
+                 do_reconnect=True,
                  max_height=None,
                  method='cv2',
                  frame_crop=None,
-                 rtsp_tcp=True):
+                 rtsp_tcp=True,
+                 logger=None):
         """VideoManager that helps with multiple concurrent video streams
 
         Args:
@@ -16,10 +18,12 @@ class VideoManager:
             queue_size (int or None): No. of frames to buffer in memory to prevent blocking I/O operations (https://www.pyimagesearch.com/2017/02/06/faster-video-file-fps-with-cv2-videocapture-and-opencv/). Set to None to prevent dropping any frames (only do this for video files)
             recording_dir (str): Path to folder to record source video, None to disable recording.
             reconnect_threshold_sec (int): Min seconds between reconnection attempts, set higher for vlc to give it time to connect
+            do_reconnect (bool): Flag whether to perform reconnection after reconnect threshold duration is met. If False, then VideoStream will not reconnect, instead will stop after deque is consumed finished. (Defaults to True, but if want to process a video file once through then set to False.) 
             max_height(int): Max height of video in px
             method (str): 'cv2' or 'vlc', 'vlc' is slower but more robust to artifacting
             frame_crop (list): LTRB coordinates for frame cropping 
-            rtsp_tcp (bool): Only for 'vlc' method. Default is True. If rtsp stream is UDP, then setting to False will remove "--rtsp-tcp" flag from vlc command.  
+            rtsp_tcp (bool): Only for 'vlc' method. Default is True. If rtsp stream is UDP, then setting to False will remove "--rtsp-tcp" flag from vlc command. 
+            logger (logger object) 
         """
 
         # self.max_height = int(max_height)
@@ -41,8 +45,11 @@ class VideoManager:
                                 manual_video_fps=int(manual_video_fps[i]),
                                 queue_size=queue_size, recording_dir=recording_dir,
                                 reconnect_threshold_sec=int(reconnect_threshold_sec),
+                                do_reconnect=do_reconnect,
                                 frame_crop=frame_crop,
-                                rtsp_tcp=rtsp_tcp)
+                                rtsp_tcp=rtsp_tcp,
+                                logger=logger
+                                )
 
             self.videos.append({'video_feed_name': video_feed_name, 'stream': stream})
 

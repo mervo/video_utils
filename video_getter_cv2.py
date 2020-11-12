@@ -1,11 +1,24 @@
 import os
 import time
+import logging
 from collections import deque
 from datetime import datetime
 from threading import Thread
 
 import cv2
 
+log_level = logging.DEBUG
+default_logger = logging.getLogger('VideoStream (default logger)')
+# Logger.setLevel() specifies the lowest-severity log message a logger will handle, where debug is the lowest
+# built-in severity level and critical is the highest built-in severity. For example, if the severity level is INFO,
+# the logger will handle only INFO, WARNING, ERROR, and CRITICAL messages and will ignore DEBUG messages.
+default_logger.setLevel(log_level)
+# create console handler and set level handler will send on.
+handler = logging.StreamHandler()
+handler.setLevel(log_level)
+formatter = logging.Formatter('[%(levelname)s] [%(name)s] %(message)s')
+handler.setFormatter(formatter)
+default_logger.addHandler(handler)
 
 class VideoStream:
     """
@@ -15,14 +28,23 @@ class VideoStream:
 
     def __init__(self, video_feed_name, src, manual_video_fps, queue_size=3, recording_dir=None,
                  reconnect_threshold_sec=20,
+                 do_reconnect=True,
                  resize_fn=None,
                  frame_crop=None,
-                 rtsp_tcp=True):
+                 rtsp_tcp=True,
+                 logger=None):
+
+        if logger is None:
+            self.logger = default_logger
+        else:
+            self.logger = logger
+
         # rtsp_tcp argument does nothing here. only for vlc. 
-        self.video_feed_name = video_feed_name # <cam name>
-        self.src = src # <path>
+        self.video_feed_name = video_feed_name
+        self.src = src
         self.stream = cv2.VideoCapture(self.src)
         self.reconnect_threshold_sec = reconnect_threshold_sec
+        self.do_reconnect = do_reconnect
         self.pauseTime = None
         self.stopped = True
         self.Q = deque(maxlen=queue_size)  # Maximum size of a deque or None if unbounded.
@@ -74,7 +96,7 @@ class VideoStream:
             self.__init_src_recorder()
 
         except Exception as error:
-            print('init stream {} error: {}'.format(self.video_feed_name, error))
+            self.logger.error('init stream {} error: {}'.format(self.video_feed_name, error))
 
     def __init_src_recorder(self):
         if self.record_source_video and self.inited:
@@ -94,7 +116,7 @@ class VideoStream:
         t = Thread(target=self.get, args=())
         t.start()
 
-        print('start video streaming for {}'.format(self.video_feed_name))
+        self.logger.info('Start video streaming for {}'.format(self.video_feed_name))
         return self
 
     def reconnect_start(self):
@@ -124,31 +146,34 @@ class VideoStream:
                     time.sleep(1 / self.fps)
 
             except Exception as e:
-                print('stream grab {} error: {}'.format(self.video_feed_name, e))
+                self.logger.warning('Stream {} grab error: {}'.format(self.video_feed_name, e))
                 grabbed = False
 
             if not grabbed:
-                if self.reconnect_threshold_sec > 0:
-                    if self.pauseTime is None:
-                        self.pauseTime = time.time()
-                        self.printTime = time.time()
-                        print('No frames for {}, starting {:0.1f}sec countdown to reconnect.'. \
-                              format(self.video_feed_name, self.reconnect_threshold_sec))
-                    time_since_pause = time.time() - self.pauseTime
-                    time_since_print = time.time() - self.printTime
-                    if time_since_print > 1:  # prints only every 1 sec
-                        print('No frames for {}, reconnect starting in {:0.1f}sec'. \
-                              format(self.video_feed_name, self.reconnect_threshold_sec - time_since_pause))
-                        self.printTime = time.time()
+                if self.pauseTime is None:
+                    self.pauseTime = time.time()
+                    self.printTime = time.time()
+                    self.logger.info('No frames for {}, starting {:0.1f}sec countdown.'. \
+                          format(self.video_feed_name, self.reconnect_threshold_sec))
+                time_since_pause = time.time() - self.pauseTime
+                countdown_time = self.reconnect_threshold_sec - time_since_pause
+                time_since_print = time.time() - self.printTime
+                if time_since_print > 1 and countdown_time >= 0:  # prints only every 1 sec
+                    self.logger.debug(f'No frames for {self.video_feed_name}, countdown: {countdown_time:0.1f}sec')
+                    self.printTime = time.time()
 
-                    if time_since_pause > self.reconnect_threshold_sec:
+                if countdown_time <= 0 :
+                    if self.do_reconnect:
                         self.reconnect_start()
                         break
-                    continue
-                else:
-                    print(f'No frames for {self.video_feed_name}. Not reconnecting. Stopping..')
-                    self.stop()
-                    break
+                    elif not self.more():
+                        self.logger.info(f'Not reconnecting. Stopping..')
+                        self.stop()
+                        break
+                    else:
+                        time.sleep(1)
+                        self.logger.debug(f'Countdown reached but still have unconsumed frames in deque: {len(self.Q)}')
+                continue
 
             self.pauseTime = None
 
@@ -176,10 +201,10 @@ class VideoStream:
             if self.out_vid:
                 self.out_vid.release()
 
-            print('stop video streaming for {}'.format(self.video_feed_name))
+            self.logger.info('Stopped video streaming for {}'.format(self.video_feed_name))
 
     def reconnect(self):
-        print('Reconnecting')
+        self.logger.info(f'Reconnecting to {self.video_feed_name}...')
         if self.stream:
             self.stream.release()
 
@@ -187,7 +212,7 @@ class VideoStream:
             self.Q.clear()
 
         while not self.stream.isOpened():
-            print(str(datetime.now()), 'Reconnecting to', self.video_feed_name)
+            self.logger.debug(str(datetime.now()), 'Reconnecting to', self.video_feed_name)
             self.stream = cv2.VideoCapture(self.src)
         if not self.stream.isOpened():
             return ('error opening {}'.format(self.video_feed_name))
@@ -195,10 +220,6 @@ class VideoStream:
         if not self.inited:
             self.init_src()
 
-        print('VideoStream for {} initialised!'.format(self.video_feed_name))
+        self.logger.info('VideoStream for {} initialised!'.format(self.video_feed_name))
         self.pauseTime = None
         self.start()
-
-    def get_frame_time(self):
-        #Returns time elapsed since start of video, in miliseconds
-        return self.stream.get(cv2.CAP_PROP_POS_MSEC) 

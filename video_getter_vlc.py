@@ -7,7 +7,6 @@ import vlc
 
 from . import video_getter_cv2
 
-
 class VideoStream(video_getter_cv2.VideoStream):
     """
     Class that uses vlc instead of cv2 to continuously get frames with a dedicated thread as a workaround for artifacts.
@@ -15,13 +14,20 @@ class VideoStream(video_getter_cv2.VideoStream):
 
     def __init__(self, video_feed_name, src, manual_video_fps, queue_size=3, recording_dir=None,
                  reconnect_threshold_sec=20,
+                 do_reconnect=True,
                  resize_fn=None,
                  frame_crop=None,
-                 rtsp_tcp=True):
-        video_getter_cv2.VideoStream.__init__(self, video_feed_name, src, manual_video_fps, queue_size, recording_dir,
-                                              reconnect_threshold_sec,
-                                              resize_fn,
-                                              frame_crop)
+                 rtsp_tcp=True,
+                 logger=None):
+        video_getter_cv2.VideoStream.__init__(self, video_feed_name, src, manual_video_fps, 
+                        queue_size=queue_size, 
+                        recording_dir=recording_dir,
+                        reconnect_threshold_sec=reconnect_threshold_sec,
+                        do_reconnect=do_reconnect,
+                        resize_fn=resize_fn,
+                        frame_crop=frame_crop,
+                        rtsp_tcp=rtsp_tcp,
+                        logger=logger)
 
         self.fixed_png_path = 'temp_vlc_frame_{}.png'.format(video_feed_name)
         vlc_flags = '--vout=dummy --aout=dummy'
@@ -69,31 +75,34 @@ class VideoStream(video_getter_cv2.VideoStream):
                     time.sleep(1 / self.fps)
 
             except Exception as e:
-                print('stream grab error:{}'.format(e))
+                self.logger.warning('Stream {} grab error: {}'.format(self.video_feed_name, e))
                 grabbed = False
 
             if not grabbed:
-                if self.reconnect_threshold_sec > 0:
-                    if self.pauseTime is None:
-                        self.pauseTime = time.time()
-                        self.printTime = time.time()
-                        print('No frames for {}, starting {:0.1f}sec countdown to reconnect.'. \
-                              format(self.video_feed_name, self.reconnect_threshold_sec))
-                    time_since_pause = time.time() - self.pauseTime
-                    time_since_print = time.time() - self.printTime
-                    if time_since_print > 1:  # prints only every 1 sec
-                        print('No frames for {}, reconnect starting in {:0.1f}sec'. \
-                              format(self.video_feed_name, self.reconnect_threshold_sec - time_since_pause))
-                        self.printTime = time.time()
+                if self.pauseTime is None:
+                    self.pauseTime = time.time()
+                    self.printTime = time.time()
+                    self.logger.info('No frames for {}, starting {:0.1f}sec countdown.'. \
+                          format(self.video_feed_name, self.reconnect_threshold_sec))
+                time_since_pause = time.time() - self.pauseTime
+                countdown_time = self.reconnect_threshold_sec - time_since_pause
+                time_since_print = time.time() - self.printTime
+                if time_since_print > 1 and countdown_time >= 0:  # prints only every 1 sec
+                    self.logger.debug(f'No frames for {self.video_feed_name}, countdown: {countdown_time:0.1f}sec')
+                    self.printTime = time.time()
 
-                    if time_since_pause > self.reconnect_threshold_sec:
+                if countdown_time <= 0 :
+                    if self.do_reconnect:
                         self.reconnect_start()
                         break
-                    continue
-                else:
-                    print(f'No frames for {self.video_feed_name}. Not reconnecting. Stopping..')
-                    self.stop()
-                    break
+                    elif not self.more():
+                        self.logger.info(f'Not reconnecting. Stopping..')
+                        self.stop()
+                        break
+                    else:
+                        time.sleep(1)
+                        self.logger.debug(f'Countdown reached but still have unconsumed frames in deque: {len(self.Q)}')
+                continue
 
             self.pauseTime = None
 
@@ -110,11 +119,10 @@ class VideoStream(video_getter_cv2.VideoStream):
                 self.vlc_player.release()
                 self.vlc_instance.release()
 
-            print('stop video streaming for {}'.format(self.video_feed_name))
+            self.logger.info('Stopped video streaming for {}'.format(self.video_feed_name))
 
     def reconnect(self):
-        print('Reconnecting...')
-
+        self.logger.info(f'Reconnecting to {self.video_feed_name}...')
         if self.more():
             self.Q.clear()
 
@@ -129,7 +137,7 @@ class VideoStream(video_getter_cv2.VideoStream):
         if not self.inited:
             self.init_src()
 
-        print('VideoStream for {} initialised!'.format(self.video_feed_name))
+        self.logger.info('VideoStream for {} initialised!'.format(self.video_feed_name))
         self.pauseTime = None
         self.start()
 
