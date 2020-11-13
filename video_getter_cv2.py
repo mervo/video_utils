@@ -223,3 +223,7 @@ class VideoStream:
         self.logger.info('VideoStream for {} initialised!'.format(self.video_feed_name))
         self.pauseTime = None
         self.start()
+
+    def get_frame_time(self):
+        #Returns time elapsed since start of video, in miliseconds
+        return self.stream.get(cv2.CAP_PROP_POS_MSEC)  
