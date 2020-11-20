@@ -233,7 +233,7 @@ class VideoStream:
 
         Returns
         ----------
-         - If source_type is a file, returns time elapsed since start of video in miliseconds
+         - If source_type is a file, returns time elapsed since start of video in milliseconds
          - Else, returns current unix time, in milliseconds
          """        
          if self.source_type == 'file':
