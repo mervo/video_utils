@@ -20,6 +20,7 @@ formatter = logging.Formatter('[%(levelname)s] [%(name)s] %(message)s')
 handler.setFormatter(formatter)
 default_logger.addHandler(handler)
 
+
 class VideoStream:
     """
     Class that continuously gets frames from a cv2 VideoCapture object
@@ -72,6 +73,9 @@ class VideoStream:
             self.stream = cv2.VideoCapture(self.src)
             if not self.manual_video_fps:
                 self.fps = int(self.stream.get(cv2.CAP_PROP_FPS))
+                if self.fps == 0:
+                    self.logger.warning('cv2.CAP_PROP_FPS was 0. Defaulting to 30 fps.')
+                    self.fps = 30
             else:
                 self.fps = self.manual_video_fps
             # width and height returns 0 if stream not captured
@@ -79,9 +83,9 @@ class VideoStream:
                 self.vid_width = int(self.stream.get(3))
                 self.vid_height = int(self.stream.get(4))
             else:
-                l,t,r,b = self.frame_crop
+                l, t, r, b = self.frame_crop
                 self.vid_width = r - l
-                self.vid_height = b - t            
+                self.vid_height = b - t
 
             self.vidInfo = {'video_feed_name': self.video_feed_name, 'height': self.vid_height, 'width': self.vid_width,
                             'manual_fps_inputted': self.manual_video_fps is not None,
@@ -110,7 +114,7 @@ class VideoStream:
     def start(self):
         if not self.inited:
             self.init_src()
-    
+
         self.stopped = False
 
         t = Thread(target=self.get, args=())
@@ -132,8 +136,8 @@ class VideoStream:
 
                 if grabbed:
                     if self.frame_crop is not None:
-                        l,t,r,b = self.frame_crop
-                        frame = frame[t:b,l:r]
+                        l, t, r, b = self.frame_crop
+                        frame = frame[t:b, l:r]
 
                     self.Q.appendleft(frame)
 
@@ -154,7 +158,7 @@ class VideoStream:
                     self.pauseTime = time.time()
                     self.printTime = time.time()
                     self.logger.info('No frames for {}, starting {:0.1f}sec countdown.'. \
-                          format(self.video_feed_name, self.reconnect_threshold_sec))
+                                     format(self.video_feed_name, self.reconnect_threshold_sec))
                 time_since_pause = time.time() - self.pauseTime
                 countdown_time = self.reconnect_threshold_sec - time_since_pause
                 time_since_print = time.time() - self.printTime
@@ -162,7 +166,7 @@ class VideoStream:
                     self.logger.debug(f'No frames for {self.video_feed_name}, countdown: {countdown_time:0.1f}sec')
                     self.printTime = time.time()
 
-                if countdown_time <= 0 :
+                if countdown_time <= 0:
                     if self.do_reconnect:
                         self.reconnect_start()
                         break
@@ -225,5 +229,5 @@ class VideoStream:
         self.start()
 
     def get_frame_time(self):
-        #Returns time elapsed since start of video, in miliseconds
-        return self.stream.get(cv2.CAP_PROP_POS_MSEC)  
+        # Returns time elapsed since start of video, in miliseconds
+        return self.stream.get(cv2.CAP_PROP_POS_MSEC)
