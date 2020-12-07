@@ -27,7 +27,7 @@ class VideoStream:
     with a dedicated thread.
     """
 
-    def __init__(self, video_feed_name, src, manual_video_fps, queue_size=3, recording_dir=None,
+    def __init__(self, video_feed_name, source_type, src, manual_video_fps, queue_size=3, recording_dir=None,
                  reconnect_threshold_sec=20,
                  do_reconnect=True,
                  resize_fn=None,
@@ -41,8 +41,9 @@ class VideoStream:
             self.logger = logger
 
         # rtsp_tcp argument does nothing here. only for vlc. 
-        self.video_feed_name = video_feed_name
-        self.src = src
+        self.video_feed_name = video_feed_name # <cam name>
+        self.source_type = source_type
+        self.src = src # <path>
         self.stream = cv2.VideoCapture(self.src)
         self.reconnect_threshold_sec = reconnect_threshold_sec
         self.do_reconnect = do_reconnect
@@ -228,6 +229,17 @@ class VideoStream:
         self.pauseTime = None
         self.start()
 
-    def get_frame_time(self):
-        # Returns time elapsed since start of video, in miliseconds
-        return self.stream.get(cv2.CAP_PROP_POS_MSEC)
+    def get_frame_time(self, clock):
+        """
+        Parameters
+        ----------
+        clock : utils.clock.Clock object
+        Returns
+        ----------
+         - If source_type is a file, returns time elapsed since start of video in milliseconds
+         - Else, returns current unix time, in milliseconds
+         """        
+        if self.source_type == 'file':
+            return self.stream.get(cv2.CAP_PROP_POS_MSEC)
+        else: 
+            return int(1000 * clock.get_now_SGT_unixts())

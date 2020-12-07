@@ -1,7 +1,7 @@
 from pathlib import Path
 
 class VideoManager:
-    def __init__(self, video_feed_names, streams, manual_video_fps, queue_size=3, recording_dir=None,
+    def __init__(self, video_feed_names, source_types, streams, manual_video_fps, queue_size=3, recording_dir=None,
                  reconnect_threshold_sec=20,
                  do_reconnect=True,
                  max_height=None,
@@ -13,6 +13,7 @@ class VideoManager:
 
         Args:
             video_feed_names (list): List of human readable strings for ease of identifying video source
+            source_types (list): List of strings for identifying whether it is a stream or a video.
             streams (list): List of strings of file paths or rtsp streams
             manual_video_fps (list): List of fps(int) for each stream, -1 if fps information available from video source
             queue_size (int or None): No. of frames to buffer in memory to prevent blocking I/O operations (https://www.pyimagesearch.com/2017/02/06/faster-video-file-fps-with-cv2-videocapture-and-opencv/). Set to None to prevent dropping any frames (only do this for video files)
@@ -30,7 +31,7 @@ class VideoManager:
         self.num_vid_streams = len(streams)
         self.stopped = True
 
-        assert len(streams) == len(video_feed_names), 'streams and camNames should be the same length'
+        assert len(streams) == len(source_types) == len(video_feed_names), 'streams, source types and camNames should be the same length'
         self.videos = []
 
         if (method == 'cv2'):
@@ -41,7 +42,7 @@ class VideoManager:
             from .video_getter_cv2 import VideoStream
 
         for i, video_feed_name in enumerate(video_feed_names):
-            stream = VideoStream(video_feed_name, streams[i], 
+            stream = VideoStream(video_feed_name, source_types[i], streams[i], 
                                 manual_video_fps=int(manual_video_fps[i]),
                                 queue_size=queue_size, recording_dir=recording_dir,
                                 reconnect_threshold_sec=int(reconnect_threshold_sec),
@@ -72,6 +73,7 @@ class VideoManager:
         '''
         video_feed_names = []
         streams = []
+        source_types = []
         manual_video_fps = []
         pure_files_only = True
         with open(list_file, 'r') as f:
@@ -82,15 +84,16 @@ class VideoManager:
                 splits = l.split(',')
                 video_feed_names.append(splits[0])
                 url = splits[1]
-                sourcetype, path = url.split(':', 1)
-                if sourcetype == 'usb':
+                source_type, path = url.split(':', 1)
+                source_types.append(source_type)
+                if source_type == 'usb':
                     video_path = int(path)
                     pure_files_only = False
-                elif sourcetype == 'file':
+                elif source_type == 'file':
                     video_path = path
                     assert Path(video_path).is_file(),f'{video_path} is defined as file but it does not exist!'
                 else:
-                    assert sourcetype == 'rtsp' or sourcetype == 'http' or sourcetype == 'https',f'Source type given of {sourcetype} is not supported' # Unsure if there are other types of video network stream protocols/  
+                    assert source_type == 'rtsp' or source_type == 'http' or source_type == 'https',f'Source type given of {source_type} is not supported' # Unsure if there are other types of video network stream protocols/  
                     video_path = url
                     pure_files_only = False
                 streams.append(video_path)
@@ -104,7 +107,7 @@ class VideoManager:
         if pure_files_only and 'queue_size' not in kwargs:
             kwargs['queue_size'] = None
 
-        return cls(video_feed_names, streams, manual_video_fps, **kwargs)
+        return cls(video_feed_names, source_types, streams, manual_video_fps, **kwargs)
 
     # def _resize(self, frame):
     # 	height, width = frame.shape[:2]

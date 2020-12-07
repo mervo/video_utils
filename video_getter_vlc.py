@@ -12,14 +12,14 @@ class VideoStream(video_getter_cv2.VideoStream):
     Class that uses vlc instead of cv2 to continuously get frames with a dedicated thread as a workaround for artifacts.
     """
 
-    def __init__(self, video_feed_name, src, manual_video_fps, queue_size=3, recording_dir=None,
+    def __init__(self, video_feed_name, source_type, src, manual_video_fps, queue_size=3, recording_dir=None,
                  reconnect_threshold_sec=20,
                  do_reconnect=True,
                  resize_fn=None,
                  frame_crop=None,
                  rtsp_tcp=True,
                  logger=None):
-        video_getter_cv2.VideoStream.__init__(self, video_feed_name, src, manual_video_fps, 
+        video_getter_cv2.VideoStream.__init__(self, video_feed_name, source_type, src, manual_video_fps, 
                         queue_size=queue_size, 
                         recording_dir=recording_dir,
                         reconnect_threshold_sec=reconnect_threshold_sec,
@@ -141,6 +141,17 @@ class VideoStream(video_getter_cv2.VideoStream):
         self.pauseTime = None
         self.start()
 
-    def get_frame_time(self):
-        #Returns time elapsed since start of video, in milliseconds
-        return self.vlc_player.get_time()
+    def get_frame_time(self, clock):
+        """
+        Parameters
+        ----------
+        clock : utils.clock.Clock object
+        Returns
+        ----------
+         - If source_type is a file, returns time elapsed since start of video in milliseconds
+         - Else, returns current unix time, in milliseconds
+         """     
+        if self.source_type == 'file':
+            return self.vlc_player.get_time()
+        else: 
+            return int(1000 * clock.get_now_SGT_unixts())
