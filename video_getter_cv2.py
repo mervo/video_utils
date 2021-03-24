@@ -47,6 +47,8 @@ class VideoStream:
         self.stream = cv2.VideoCapture(self.src)
         self.reconnect_threshold_sec = reconnect_threshold_sec
         self.do_reconnect = do_reconnect
+        if not rtsp_tcp:
+            os.environ["OPENCV_FFMPEG_CAPTURE_OPTIONS"] = "rtsp_transport;udp"
         self.pauseTime = None
         self.stopped = True
         self.Q = deque(maxlen=queue_size)  # Maximum size of a deque or None if unbounded.
