@@ -2,13 +2,14 @@ from . import video_manager
 
 
 class VideoManager(video_manager.VideoManager):
-    def __init__(self, stream, manual_video_fps, rectangle_crops, queue_size=3, recording_dir=None,
+    def __init__(self, source_type, stream, manual_video_fps, rectangle_crops, queue_size=3, recording_dir=None,
                  reconnect_threshold_sec=20,
                  max_height=1080,
                  method='cv2'):
         """VideoManager that helps with multiple concurrent video streams
 
         Args:
+            source_type (str): string for identifying whether it is a stream or a video: 'usb', 'file', 'rtsp', 'http/https'
             stream(str) : file path or rtsp stream
             manual_video_fps (int): fps of stream, -1 if fps information available from video source
             rectangle_crops(list): list of (x, y, w, h) to crop as individual video feeds
@@ -35,7 +36,7 @@ class VideoManager(video_manager.VideoManager):
         else:
             from .video_getter_cv2 import VideoStream
 
-        stream = VideoStream('MASTER_STREAM', stream, manual_video_fps=int(manual_video_fps),
+        stream = VideoStream('MASTER_STREAM', source_type, stream, manual_video_fps=int(manual_video_fps),
                              queue_size=int(queue_size), recording_dir=recording_dir,
                              reconnect_threshold_sec=int(reconnect_threshold_sec))
 
