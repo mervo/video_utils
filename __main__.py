@@ -12,6 +12,7 @@ video_feed_names = os.environ.get('VIDEO_FEED_NAMES',
 streams = os.environ.get('STREAMS',
                          '/data/datasets/drone/macritchie-reservoir.mp4,rtsp://wowzaec2demo.streamlock.net/vod/mp4:BigBuckBunny_115k.mov')
 manual_video_fps = os.environ.get('MANUAL_VIDEO_FPS', '-1,-1')  # -1 to try to read from video stream metadata
+source_types = os.environ.get('SOURCE_TYPES', 'file,rtsp')
 
 queue_size = int(os.environ.get('QUEUE_SIZE', 2))
 recording_dir = os.environ.get('RECORDING_DIR', None)
@@ -30,7 +31,7 @@ def one_video_manager_to_many_source():
     from .video_manager import VideoManager
 
     vidManager = VideoManager(video_feed_names=video_feed_names.split(','),
-                              streams=streams.split(','),
+                              streams=streams.split(','), source_types=source_types.split(','),
                               manual_video_fps=manual_video_fps.split(','), queue_size=queue_size,
                               recording_dir=recording_dir,
                               reconnect_threshold_sec=reconnect_threshold_sec, max_height=max_height, method=method)
@@ -57,7 +58,8 @@ def one_video_manager_to_one_source():
     frame_drawer = FrameDrawer()
     from .video_manager_single_feed_multiple_sources import VideoManager
 
-    vidManager = VideoManager('rtsp://wowzaec2demo.streamlock.net/vod/mp4:BigBuckBunny_115k.mov',
+    vidManager = VideoManager(source_type='rtsp',
+                              stream='rtsp://wowzaec2demo.streamlock.net/vod/mp4:BigBuckBunny_115k.mov',
                               manual_video_fps=-1,
                               rectangle_crops=[(0, 0, 60, 160), (80, 0, 60, 160), (160, 0, 60, 160)],
                               queue_size=queue_size,

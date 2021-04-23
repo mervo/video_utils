@@ -33,6 +33,7 @@ class VideoStream:
                  resize_fn=None,
                  frame_crop=None,
                  rtsp_tcp=True,
+                 max_cache=10,
                  logger=None):
 
         if logger is None:
@@ -52,6 +53,7 @@ class VideoStream:
         self.pauseTime = None
         self.stopped = True
         self.Q = deque(maxlen=queue_size)  # Maximum size of a deque or None if unbounded.
+        self.max_cache = max_cache
         self.resize_fn = resize_fn
         self.inited = False
         if (manual_video_fps == -1):
@@ -135,6 +137,10 @@ class VideoStream:
         while not self.stopped:
             try:
                 # print('getting video' + str(time.time()))
+                if len(self.Q) > self.max_cache:
+                    time.sleep(0.01)
+                    continue
+
                 grabbed, frame = self.stream.read()
 
                 if grabbed:
