@@ -5,7 +5,7 @@ import time
 import cv2
 import vlc
 
-from . import video_getter_cv2
+from video_util import video_getter_cv2
 
 class VideoStream(video_getter_cv2.VideoStream):
     """
