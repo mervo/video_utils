@@ -8,7 +8,7 @@ class VideoManager:
                  method='cv2',
                  frame_crop=None,
                  rtsp_tcp=True,
-                 logger=None):
+                ):
         """VideoManager that helps with multiple concurrent video streams
 
         Args:
@@ -24,7 +24,6 @@ class VideoManager:
             method (str): 'cv2' or 'vlc', 'vlc' is slower but more robust to artifacting
             frame_crop (list): LTRB coordinates for frame cropping 
             rtsp_tcp (bool): Only for 'vlc' method. Default is True. If rtsp stream is UDP, then setting to False will remove "--rtsp-tcp" flag from vlc command. 
-            logger (logger object) 
         """
 
         # self.max_height = int(max_height)
@@ -50,7 +49,6 @@ class VideoManager:
                                  do_reconnect=do_reconnect,
                                  frame_crop=frame_crop,
                                  rtsp_tcp=rtsp_tcp,
-                                 logger=logger
                                  )
 
             self.videos.append({'video_feed_name': video_feed_name, 'stream': stream})
