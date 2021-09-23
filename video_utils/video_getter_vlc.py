@@ -19,8 +19,8 @@ class VideoStream(video_getter_cv2.VideoStream):
                  frame_crop=None,
                  rtsp_tcp=True,
                  logger=None):
-        video_getter_cv2.VideoStream.__init__(self, video_feed_name, source_type, src, manual_video_fps, 
-                        queue_size=queue_size, 
+        video_getter_cv2.VideoStream.__init__(self, video_feed_name, source_type, src, manual_video_fps,
+                        queue_size=queue_size,
                         recording_dir=recording_dir,
                         reconnect_threshold_sec=reconnect_threshold_sec,
                         do_reconnect=do_reconnect,
@@ -28,6 +28,8 @@ class VideoStream(video_getter_cv2.VideoStream):
                         frame_crop=frame_crop,
                         rtsp_tcp=rtsp_tcp,
                         logger=logger)
+
+        self.video_stream_type = 'vlc'
 
         self.fixed_png_path = 'temp_vlc_frame_{}.png'.format(video_feed_name)
         vlc_flags = '--vout=dummy --aout=dummy'
@@ -140,23 +142,4 @@ class VideoStream(video_getter_cv2.VideoStream):
         self.logger.info('VideoStream for {} initialised!'.format(self.video_feed_name))
         self.pauseTime = None
         self.start()
-
-    def get_frame_time(self, clock, do_set_start_time=False):
-        """
-        Parameters
-        ----------
-        clock : utils.clock.Clock object
-            Clock object
-        do_set_start_time : bool 
-            Flag to determine whether to get 'current' time in video/stream, or present day time.
-
-        Returns
-        ----------
-         - If do_set_start_time is True, returns time elapsed since start of video in milliseconds
-         - Else, returns current unix time, in milliseconds
-         """      
-        if do_set_start_time:
-            return self.vlc_player.get_time()
-        else: 
-            return int(1000 * clock.get_now_SGT_unixts())
 
