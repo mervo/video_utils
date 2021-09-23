@@ -24,6 +24,7 @@ class VideoStream:
                  max_cache=10,
                  ):
         # rtsp_tcp argument does nothing here. only for vlc. 
+        self.video_stream_type = 'cv2'
         self.video_feed_name = video_feed_name # <cam name>
         self.source_type = source_type
         self.src = src # <path>
@@ -218,22 +219,3 @@ class VideoStream:
         logger.info('VideoStream for {} initialised!'.format(self.video_feed_name))
         self.pauseTime = None
         self.start()
-
-    def get_frame_time(self, clock, do_set_start_time=False):
-        """
-        Parameters
-        ----------
-        clock : utils.clock.Clock object
-            Clock object
-        do_set_start_time : bool 
-            Flag to determine whether to get 'current' time in video/stream, or present day time.
-
-        Returns
-        ----------
-         - If do_set_start_time is True, returns time elapsed since start of video in milliseconds
-         - Else, returns current unix time, in milliseconds
-         """        
-        if do_set_start_time:
-            return self.stream.get(cv2.CAP_PROP_POS_MSEC)
-        else: 
-            return int(1000 * clock.get_now_SGT_unixts())
