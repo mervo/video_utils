@@ -1,6 +1,5 @@
 from pathlib import Path
 
-
 class VideoManager:
     def __init__(self, video_feed_names, source_types, streams, manual_video_fps, queue_size=3, recording_dir=None,
                  reconnect_threshold_sec=20,
