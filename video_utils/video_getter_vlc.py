@@ -18,16 +18,16 @@ class VideoStream(video_getter_cv2.VideoStream):
                  resize_fn=None,
                  frame_crop=None,
                  rtsp_tcp=True,
-                 logger=None):
-        video_getter_cv2.VideoStream.__init__(self, video_feed_name, source_type, src, manual_video_fps,
-                        queue_size=queue_size,
+                 ):
+        video_getter_cv2.VideoStream.__init__(self, video_feed_name, source_type, src, manual_video_fps, 
+                        queue_size=queue_size, 
                         recording_dir=recording_dir,
                         reconnect_threshold_sec=reconnect_threshold_sec,
                         do_reconnect=do_reconnect,
                         resize_fn=resize_fn,
                         frame_crop=frame_crop,
                         rtsp_tcp=rtsp_tcp,
-                        logger=logger)
+                        )
 
         self.video_stream_type = 'vlc'
 
@@ -77,20 +77,20 @@ class VideoStream(video_getter_cv2.VideoStream):
                     time.sleep(1 / self.fps)
 
             except Exception as e:
-                self.logger.warning('Stream {} grab error: {}'.format(self.video_feed_name, e))
+                logger.warning('Stream {} grab error: {}'.format(self.video_feed_name, e))
                 grabbed = False
 
             if not grabbed:
                 if self.pauseTime is None:
                     self.pauseTime = time.time()
                     self.printTime = time.time()
-                    self.logger.info('No frames for {}, starting {:0.1f}sec countdown.'. \
+                    logger.info('No frames for {}, starting {:0.1f}sec countdown.'. \
                           format(self.video_feed_name, self.reconnect_threshold_sec))
                 time_since_pause = time.time() - self.pauseTime
                 countdown_time = self.reconnect_threshold_sec - time_since_pause
                 time_since_print = time.time() - self.printTime
                 if time_since_print > 1 and countdown_time >= 0:  # prints only every 1 sec
-                    self.logger.debug(f'No frames for {self.video_feed_name}, countdown: {countdown_time:0.1f}sec')
+                    logger.debug(f'No frames for {self.video_feed_name}, countdown: {countdown_time:0.1f}sec')
                     self.printTime = time.time()
 
                 if countdown_time <= 0 :
@@ -98,12 +98,12 @@ class VideoStream(video_getter_cv2.VideoStream):
                         self.reconnect_start()
                         break
                     elif not self.more():
-                        self.logger.info(f'Not reconnecting. Stopping..')
+                        logger.info(f'Not reconnecting. Stopping..')
                         self.stop()
                         break
                     else:
                         time.sleep(1)
-                        self.logger.debug(f'Countdown reached but still have unconsumed frames in deque: {len(self.Q)}')
+                        logger.debug(f'Countdown reached but still have unconsumed frames in deque: {len(self.Q)}')
                 continue
 
             self.pauseTime = None
@@ -121,10 +121,10 @@ class VideoStream(video_getter_cv2.VideoStream):
                 self.vlc_player.release()
                 self.vlc_instance.release()
 
-            self.logger.info('Stopped video streaming for {}'.format(self.video_feed_name))
+            logger.info('Stopped video streaming for {}'.format(self.video_feed_name))
 
     def reconnect(self):
-        self.logger.info(f'Reconnecting to {self.video_feed_name}...')
+        logger.info(f'Reconnecting to {self.video_feed_name}...')
         if self.more():
             self.Q.clear()
 
@@ -139,7 +139,7 @@ class VideoStream(video_getter_cv2.VideoStream):
         if not self.inited:
             self.init_src()
 
-        self.logger.info('VideoStream for {} initialised!'.format(self.video_feed_name))
+        logger.info('VideoStream for {} initialised!'.format(self.video_feed_name))
         self.pauseTime = None
         self.start()
 
