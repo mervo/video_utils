@@ -28,7 +28,7 @@ Run from one level above video_utils (video_utils should be treated as a module,
 
 def one_video_manager_to_many_source():
     frame_drawer = FrameDrawer()
-    from .video_manager import VideoManager
+    from video_utils.video_manager import VideoManager
 
     vidManager = VideoManager(video_feed_names=video_feed_names.split(','),
                               streams=streams.split(','), source_types=source_types.split(','),
@@ -56,7 +56,7 @@ def one_video_manager_to_many_source():
 
 def one_video_manager_to_one_source():
     frame_drawer = FrameDrawer()
-    from .video_manager_single_feed_multiple_sources import VideoManager
+    from video_utils.video_manager_single_feed_multiple_sources import VideoManager
 
     vidManager = VideoManager(source_type='rtsp',
                               stream='rtsp://wowzaec2demo.streamlock.net/vod/mp4:BigBuckBunny_115k.mov',

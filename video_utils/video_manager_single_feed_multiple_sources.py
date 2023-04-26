@@ -1,4 +1,4 @@
-from video_util import video_manager
+from video_utils import video_manager
 
 class VideoManager(video_manager.VideoManager):
     def __init__(self, source_type, stream, manual_video_fps, rectangle_crops, queue_size=3, recording_dir=None,
