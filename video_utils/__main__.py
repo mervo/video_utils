@@ -2,7 +2,7 @@ import itertools
 import os
 import cv2
 
-from video_util.frame_drawer import FrameDrawer
+from video_utils.frame_drawer import FrameDrawer
 
 get_your_config_from_env_var = os.environ.get('CONFIG_NAME', 'default_value_if_not_set')
 
